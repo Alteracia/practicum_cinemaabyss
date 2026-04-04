@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь")
+System_Ext(online_cinema, "Онлайн кинотеатры", "Сторонние сервисы онлайн кинопоказа")
+ContainerQueue_Ext(recommend, "Рекомендации", "RabbitMQ", "Очередь сообщений стороннего сервиса Рекомендаций")
+
+System_Boundary(c0, "Кинобездна") {
+    Container(mobile, "Мобильное приложение", "Kotlin", "Android, Android TV")
+    Container(webapp, "Веб приложение", "Go")
+
+    Container(gate, "API Gateway", "Nginx", "Gateway")
+
+    System_Boundary(c1, "Микросервис управления пользователями") {
+        Container(auth, "Сервис авторизации", "Go", "Авторизация и аутентификация пользователей")
+        ContainerDb(data_auth, "База данных Пользователей", "Postgres")
+    }
+    System_Boundary(c2, "Микросервис управления платежами") {
+        Container(payment, "Сервис управления платежами", "Go", "Обработка платежей")
+        ContainerDb(data_payment, "База данных платежей", "Postgres")
+    }
+    System_Boundary(c3, "Микросервис управления подписками") {
+        Container(subscriptions, "Сервис подписок", "Go", "Обработка подписок")
+        ContainerDb(data_subscriptions, "База данных подписок", "Postgres")
+    }
+    System_Boundary(c4, "Микросервис метаданных фильмов") {
+        Container(meta, "Сервис обработки метаданных", "Go", "Обработка метаданных")
+        ContainerDb(data_meta, "База метаданных", "Postgres")
+    }
+}
+
+Rel(user, mobile, "Uses")
+Rel(user, webapp, "Uses")
+
+Rel(mobile, gate, "Uses")
+Rel(webapp, gate, "Uses")
+
+Rel(gate, auth, "Auth")
+Rel(gate, payment, "Uses")
+Rel(gate, subscriptions, "Uses")
+Rel(gate, meta, "Uses")
+Rel(gate, online_cinema, "Uses")
+Rel(gate, recommend, "Uses")
+
+Rel(auth, data_auth, "Uses")
+Rel(payment, data_payment, "Uses")
+Rel(subscriptions, data_subscriptions, "Uses")
+Rel(meta, data_meta, "Uses")
+
+@enduml
